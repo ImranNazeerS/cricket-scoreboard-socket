@@ -8,7 +8,10 @@ import cors from "cors";
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server, {
+  cors: { origin: "*" },
+  transports: ["websocket", "polling"],
+});
 
 const CRICBUZZ_URL = "https://www.cricbuzz.com/cricket-match/live-scores";
 let cachedScores = [];
@@ -17,7 +20,12 @@ let cachedScores = [];
 const fetchCricketScores = async () => {
   console.log("Fetching live scores...");
   try {
-    const { data } = await axios.get(CRICBUZZ_URL);
+    const { data } = await axios.get(CRICBUZZ_URL, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/113.0.0.0 Safari/537.36",
+      },
+    });
     const $ = cheerio.load(data);
     let matches = [];
 
@@ -44,6 +52,8 @@ const fetchCricketScores = async () => {
         .find(".cb-text-live, .cb-text-complete")
         .text()
         .trim();
+
+      console.log({ title, team1, team2, score1, score2, status });
 
       if (
         title.includes("India") ||
@@ -75,13 +85,15 @@ io.on("connection", (socket) => {
   });
 });
 
-// Run cron job from **7 PM to 1 AM** 
-cron.schedule("*/30 * * * * *", () => {
-  const hours = new Date().getHours();
-  if (hours >= 19 || hours < 1) {
-    fetchCricketScores();
-  }
-});
+// Run cron job from **7 PM to 1 AM**
+// cron.schedule("*/30 * * * * *", () => {
+//   const hours = new Date().getHours();
+//   if (hours >= 19 || hours < 1) {
+//     fetchCricketScores();
+//   }
+// });
+
+cron.schedule("*/30 * * * * *", fetchCricketScores);
 
 // Start server
 const PORT = process.env.PORT || 8080;
