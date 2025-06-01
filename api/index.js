@@ -14,6 +14,8 @@ const io = new Server(server, {
 });
 
 const CRICBUZZ_URL = "https://www.cricbuzz.com/cricket-match/live-scores";
+
+const connectedUsers = new Map();
 let cachedScores = [];
 
 // Function to fetch scores
@@ -78,7 +80,18 @@ const fetchCricketScores = async () => {
 // WebSocket connection
 io.on("connection", (socket) => {
   console.log(`🟢 New user connected: ${socket.id}`);
-  socket.emit("cricketScores", cachedScores); // Send latest scores on connect
+  socket.emit("cricketScores", cachedScores);
+
+  socket.on("registerUser", (userId) => {
+    console.log(`Registered user , ${userId}`);
+
+    connectedUsers.set(userId, socket);
+    socket.userId = userId;
+  });
+
+  socket.on("client-donation", (donation) => {
+    console.log(`Donation from ${socket.userId}:`, donation);
+  });
 
   socket.on("disconnect", () => {
     console.log(`🔴 User disconnected: ${socket.id}`);
