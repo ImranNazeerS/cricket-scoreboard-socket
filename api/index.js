@@ -68,9 +68,9 @@ const fetchCricketScores = async () => {
     if (JSON.stringify(cachedScores) !== JSON.stringify(matches)) {
       cachedScores = matches;
       io.emit("cricketScores", matches);
-      console.log("📢 Scores updated & sent to clients.");
+      // console.log("📢 Scores updated & sent to clients.");
     } else {
-      console.log("No score changes detected.");
+      // console.log("No score changes detected.");
     }
   } catch (error) {
     console.error("Error fetching cricket scores:", error);
@@ -84,17 +84,27 @@ io.on("connection", (socket) => {
 
   socket.on("registerUser", (userId) => {
     console.log(`Registered user , ${userId}`);
-
-    connectedUsers.set(userId, socket);
     socket.userId = userId;
+    connectedUsers.set(userId, socket);
   });
 
   socket.on("client-donation", (donation) => {
-    console.log(`Donation from ${socket.userId}:`, donation);
+    const userId = socket.userId;
+
+    const overlaySocket = connectedUsers.get(userId);
+    if (overlaySocket) {
+      overlaySocket.emit("overlayAlert", donation);
+    } else {
+      console.warn(`⚠️ No overlay connected for user ${userId}`);
+    }
   });
 
   socket.on("disconnect", () => {
     console.log(`🔴 User disconnected: ${socket.id}`);
+
+    if (socket.userId) {
+      connectedUsers.delete(socket.userId);
+    }
   });
 });
 
