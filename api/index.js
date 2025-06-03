@@ -100,7 +100,7 @@ io.on("connection", (socket) => {
     const sockets = connectedUsers.get(userId);
     if (sockets) {
       for (const peer of sockets) {
-        if (peer.cilentType === "overlay") {
+        if (peer.clientType === "overlay") {
           peer.emit("overlayAlert", donation, userId);
         }
       }
