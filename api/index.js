@@ -92,12 +92,14 @@ io.on("connection", (socket) => {
     console.log("donation", donation);
     console.log("from user:", userId);
 
-    const overlaySocket = connectedUsers.get(userId);
-    if (overlaySocket) {
-      overlaySocket.emit("overlayAlert", donation, userId);
-    } else {
-      console.warn(`⚠️ No overlay connected for user ${userId}`);
-    }
+    io.emit("overlayAlert", donation, userId);
+
+    // const overlaySocket = connectedUsers.get(userId);
+    // if (overlaySocket) {
+    //   overlaySocket.emit("overlayAlert", donation, userId);
+    // } else {
+    //   console.warn(`⚠️ No overlay connected for user ${userId}`);
+    // }
   });
 
   socket.on("disconnect", () => {
