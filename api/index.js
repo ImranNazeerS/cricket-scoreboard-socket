@@ -88,9 +88,10 @@ io.on("connection", (socket) => {
     connectedUsers.set(userId, socket);
   });
 
-  socket.on("client-donation", (donation) => {
-    const userId = socket.userId;
+  socket.on("client-donation", (donation, userId) => {
     console.log("donation", donation);
+    console.log("from user:", userId);
+
     const overlaySocket = connectedUsers.get(userId);
     if (overlaySocket) {
       overlaySocket.emit("overlayAlert", donation, userId);
