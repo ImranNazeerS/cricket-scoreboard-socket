@@ -82,31 +82,46 @@ io.on("connection", (socket) => {
   console.log(`🟢 New user connected: ${socket.id}`);
   socket.emit("cricketScores", cachedScores);
 
-  socket.on("registerUser", (userId) => {
-    console.log(`Registered user , ${userId}`);
+  socket.on("registerUser", ({ userId, type }) => {
+    console.log(`📨 registerUser: ${userId} (${type})`);
     socket.userId = userId;
-    connectedUsers.set(userId, socket);
+    socket.clientType = type;
+
+    if (!connectedUsers.has(userId)) {
+      connectedUsers.set(userId, new Set());
+    }
+    connectedUsers.get(userId).add(socket);
   });
 
   socket.on("client-donation", (donation, userId) => {
     console.log("donation", donation);
     console.log("from user:", userId);
 
-    io.emit("overlayAlert", donation, userId);
-
-    // const overlaySocket = connectedUsers.get(userId);
-    // if (overlaySocket) {
-    //   overlaySocket.emit("overlayAlert", donation, userId);
-    // } else {
-    //   console.warn(`⚠️ No overlay connected for user ${userId}`);
-    // }
+    const sockets = connectedUsers.get(userId);
+    if (sockets) {
+      for (const peer of sockets) {
+        if (peer.cilentType === "overlay") {
+          peer.emit("overlayAlert", donation, userId);
+        }
+      }
+    } else {
+      console.warn(`⚠️ No sockets found for user ${userId}`);
+    }
   });
 
   socket.on("disconnect", () => {
-    console.log(`🔴 User disconnected: ${socket.id}`);
+    console.log(`🔴 Disconnected: ${socket.id}`);
+    const userId = socket.userId;
 
-    if (socket.userId) {
-      connectedUsers.delete(socket.userId);
+    if (userId && connectedUsers.has(userId)) {
+      const userSockets = connectedUsers.get(userId);
+      userSockets.forEach((s) => {
+        if (s === socket) userSockets.delete(s);
+      });
+
+      if (userSockets.size === 0) {
+        connectedUsers.delete(userId);
+      }
     }
   });
 });
