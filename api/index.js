@@ -20,7 +20,7 @@ let cachedScores = [];
 
 // Function to fetch scores
 const fetchCricketScores = async () => {
-  console.log("Fetching live scores...");
+  // console.log("Fetching live scores...");
   try {
     const { data } = await axios.get(CRICBUZZ_URL, {
       headers: {
@@ -90,8 +90,7 @@ io.on("connection", (socket) => {
 
   socket.on("client-donation", (donation) => {
     const userId = socket.userId;
-    console.log("socket.userId", socket.userId);
-    console.log("userId", userId);
+    console.log("donation", donation);
     const overlaySocket = connectedUsers.get(userId);
     if (overlaySocket) {
       overlaySocket.emit("overlayAlert", donation, userId);
