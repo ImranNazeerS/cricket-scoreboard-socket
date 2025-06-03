@@ -55,7 +55,7 @@ const fetchCricketScores = async () => {
         .text()
         .trim();
 
-      console.log({ title, team1, team2, score1, score2, status });
+      // console.log({ title, team1, team2, score1, score2, status });
 
       if (
         title.includes("India") ||
@@ -90,10 +90,11 @@ io.on("connection", (socket) => {
 
   socket.on("client-donation", (donation) => {
     const userId = socket.userId;
-
+    console.log("socket.userId", socket.userId);
+    console.log("userId", userId);
     const overlaySocket = connectedUsers.get(userId);
     if (overlaySocket) {
-      overlaySocket.emit("overlayAlert", donation);
+      overlaySocket.emit("overlayAlert", donation, userId);
     } else {
       console.warn(`⚠️ No overlay connected for user ${userId}`);
     }
